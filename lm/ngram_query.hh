@@ -54,22 +54,32 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
   uint64_t corpus_oov = 0;
   uint64_t corpus_tokens = 0;
 
+  std::vector<string> allTheWords;
+  allTheWords.push_back("anal");
+  allTheWords.push_back("sex");
+  allTheWords.push_back("good");
+
   while (true) {
     state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
     float total = 0.0;
     uint64_t oov = 0;
 
-    while (in.ReadWordSameLine(word)) {
-      lm::WordIndex vocab = model.GetVocabulary().Index(word);
-      ret = model.FullScore(state, vocab, out);
-      if (vocab == model.GetVocabulary().NotFound()) {
-        ++oov;
-        corpus_total_oov_only += ret.prob;
+    
+//    while (in.ReadWordSameLine(word)) {
+      for(int i = 0; i < allTheWords.size(); i++){
+          word = allTheWords[i];
+          lm::WordIndex vocab = model.GetVocabulary().Index(word);
+          ret = model.FullScore(state, vocab, out);
+          if (vocab == model.GetVocabulary().NotFound()) {
+            ++oov;
+            corpus_total_oov_only += ret.prob;
+          }
+          total += ret.prob;
+          printer.Word(word, vocab, ret);
+          ++corpus_tokens;
+          state = out;
       }
-      total += ret.prob;
-      printer.Word(word, vocab, ret);
-      ++corpus_tokens;
-      state = out;
+
     }
     // If people don't have a newline after their last query, this won't add a </s>.
     // Sue me.
@@ -85,7 +95,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     printer.Line(oov, total);
     corpus_total += total;
     corpus_oov += oov;
-  }
+//  }
   printer.Summary(
       pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
       pow(10.0, -((corpus_total - corpus_total_oov_only) / static_cast<double>(corpus_tokens - corpus_oov))), // PPL excluding OOVs
