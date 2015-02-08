@@ -146,7 +146,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         Query<Model, BasicPrint>(model, sentence_context);
     }
 
-    std::cout << outSent << std::endl;
+//    std::cout << outSent << std::endl;
 }
 
 } // namespace ngram
