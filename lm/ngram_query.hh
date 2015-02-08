@@ -41,6 +41,14 @@ struct FullPrint : public BasicPrint {
   }
 };
 
+class heapCompare
+{
+  bool operator() (const double[]& lhs, const double[]&rhs) const
+  {
+    return (lhs[0]<rhs[0]);
+  }
+};
+
 template <class Model, class Printer> void Query(const Model &model, bool sentence_context) {
   Printer printer;
   typename Model::State state, out;
@@ -54,6 +62,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
   uint64_t corpus_oov = 0;
   uint64_t corpus_tokens = 0;
 
+// read in our vocab file because fuck figuring this out
   std::vector<StringPiece> allTheWords;
   while (in.ReadWordSameLine(word)) {
       allTheWords.push_back(word);
@@ -62,18 +71,21 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     } catch (const util::EndOfFileException &e) { break;}
   }
 
-
-//  while (true) {
-    state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
-    float total = 0.0;
-    uint64_t oov = 0;
-
+        std::priority_queue<double[], std:vector<double[]>, heapCompare> probabilityHeap = new priority_queue();
+        float total = 0.0;
+        uint64_t oov = 0;
 
 //    while (in.ReadWordSameLine(word)) {
       for(int i = 0; i < allTheWords.size(); i++){
+          state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
           word = allTheWords[i];
           lm::WordIndex vocab = model.GetVocabulary().Index(word);
           ret = model.FullScore(state, vocab, out);
+          // store word probabilities as we go
+          double wordScore[2];
+          wordScore[0] = ret.prob;
+          wordScore[1] = i;
+          probabilityHeap.push_back(wordScore)
           if (vocab == model.GetVocabulary().NotFound()) {
             ++oov;
             corpus_total_oov_only += ret.prob;
