@@ -80,6 +80,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         } catch (const util::EndOfFileException &e) { break;}
     }
 
+    state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
 
     int poop = 0;
     // while we are still generating words for current sentence
@@ -87,10 +88,9 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     while (poop < 3)
     {
     ++poop;
-        state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
         std::priority_queue<ProbPair> probabilityHeap;
-        float total = 0.0;
-        uint64_t oov = 0;
+//        float total = 0.0;
+//        uint64_t oov = 0;
         double probSum = 0.0;
         // iterate over each word in our vocabulary and get the probability of choosing it
         for(int i = 0; i < generationVocab.size(); i++)
@@ -108,26 +108,25 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             probabilityHeap.push(wordScore);
             probSum += wordScore.probability;
 
-
-            if (wordIndex == model.GetVocabulary().NotFound()) {
-                ++oov;
-                corpus_total_oov_only += ret.prob;
-            }
-            total += ret.prob;
-            printer.Word(word, wordIndex, ret);
-            ++corpus_tokens;
+//            if (wordIndex == model.GetVocabulary().NotFound()) {
+//                ++oov;
+//                corpus_total_oov_only += ret.prob;
+//            }
+//            total += ret.prob;
+//            printer.Word(word, wordIndex, ret);
+//            ++corpus_tokens;
 //            state = out;
 
-            if (sentence_context) {
-                ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
-                total += ret.prob;
-                ++corpus_tokens;
-                printer.Word("</s>", model.GetVocabulary().EndSentence(), ret);
-            }
+//            if (sentence_context) {
+//                ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
+//                total += ret.prob;
+//                ++corpus_tokens;
+//                printer.Word("</s>", model.GetVocabulary().EndSentence(), ret);
+//            }
 
-            printer.Line(oov, total);
-            corpus_total += total;
-            corpus_oov += oov;
+//            printer.Line(oov, total);
+//            corpus_total += total;
+//            corpus_oov += oov;
         } // end for over vocab
 
         double randPick = static_cast <double> (rand()) / (static_cast <double> (RAND_MAX/probSum));
