@@ -96,12 +96,14 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
 
             lm::WordIndex wordIndex = model.GetVocabulary().Index(word);
             ret = model.FullScore(state, wordIndex, out);
-            probSum += ret.prob;
+
             // store word probabilities as we go
-            wordScore.probability = ret.prob;
+            wordScore.probability = exp(ret.prob);
             wordScore.vocabIndex = i;
 //            wordScore.wordIndex = wordIndex;
             probabilityHeap.push(wordScore);
+            probSum += wordScore.probability;
+
 
             if (wordIndex == model.GetVocabulary().NotFound()) {
                 ++oov;
@@ -126,10 +128,10 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
 
         double randPick = rand() * probSum;
         double curSum = 0.0;
-        while (!probabilityHeap.empty()) {
+        while (!probabilityHeap.empty() && curSum < randPick) {
             ProbPair p = probabilityHeap.top();
             if (curSum + p.probability > randPick){
-                std::cout << exp(p.probability) << " : " << generationVocab[p.vocabIndex] << std::endl;
+                std::cout << p.probability << " : " << generationVocab[p.vocabIndex] << std::endl;
             }
             else {
                 curSum += p.probability;
@@ -138,7 +140,9 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         }
 //    } // end while choosing words
 
-
+.7 .7
+.2 .9
+.1  1
     printer.Summary(
         pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
         pow(10.0, -((corpus_total - corpus_total_oov_only) / static_cast<double>(corpus_tokens - corpus_oov))), // PPL excluding OOVs
