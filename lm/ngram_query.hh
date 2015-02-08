@@ -68,6 +68,8 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     uint64_t corpus_oov = 0;
     uint64_t corpus_tokens = 0;
 
+    string outSent = "";
+
     // read in our vocab file because fuck figuring this out
     std::vector<StringPiece> generationVocab;
     while (in.ReadWordSameLine(word))
@@ -79,10 +81,13 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     }
 
 
+    int poop = 0;
     // while we are still generating words for current sentence
     // TODO stopping condition
-//    while (true)
-//    {
+    while (poop < 3)
+    {
+    ++poop;
+        state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
         std::priority_queue<ProbPair> probabilityHeap;
         float total = 0.0;
         uint64_t oov = 0;
@@ -90,7 +95,6 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         // iterate over each word in our vocabulary and get the probability of choosing it
         for(int i = 0; i < generationVocab.size(); i++)
         {
-            state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
             word = generationVocab[i];
             ProbPair wordScore;
 
@@ -128,19 +132,24 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
 
         double randPick = static_cast <double> (rand()) / (static_cast <double> (RAND_MAX/probSum));
         double curSum = 0.0;
-        std::cout << randPick << std::endl;
-
+        ProbPair p;
+        // choose a word
         while (!probabilityHeap.empty() && curSum < randPick) {
-            ProbPair p = probabilityHeap.top();
+            p = probabilityHeap.top();
+            curSum += p.probability;
             if (curSum + p.probability > randPick){
                 std::cout << p.probability << " : " << generationVocab[p.vocabIndex] << std::endl;
             }
-            else {
-                curSum += p.probability;
-            }
             probabilityHeap.pop();
         }
-//    } // end while choosing words
+        // update state with chosen word
+        string chosenWord = generationVocab[p.vocabIndex];
+        lm::WordIndex wordIndex = model.GetVocabulary().Index(chosenWord);
+        ret = model.FullScore(state, wordIndex, out);
+        outSent += " " + chosenWord;
+        state = out;
+
+    } // end while choosing words
 
     printer.Summary(
         pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
