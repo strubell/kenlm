@@ -140,9 +140,6 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         }
 //    } // end while choosing words
 
-.7 .7
-.2 .9
-.1  1
     printer.Summary(
         pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
         pow(10.0, -((corpus_total - corpus_total_oov_only) / static_cast<double>(corpus_tokens - corpus_oov))), // PPL excluding OOVs
