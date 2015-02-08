@@ -80,8 +80,8 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
 
     // while we are still generating words for current sentence
     // TODO stopping condition
-    while (true)
-    {
+//    while (true)
+//    {
         std::priority_queue<ProbPair> probabilityHeap;
         float total = 0.0;
         uint64_t oov = 0;
@@ -119,13 +119,13 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             corpus_total += total;
             corpus_oov += oov;
         } // end for over vocab
-    } // end while choosing words
 
-    while (!probabilityHeap.empty()) {
-        ProbPair p = probabilityHeap.front();
-        std::cout << p.probability << std::endl;
-        probabilityHeap.pop();
-    }
+        while (!probabilityHeap.empty()) {
+            ProbPair p = probabilityHeap.front();
+            std::cout << p.probability << std::endl;
+            probabilityHeap.pop();
+        }
+//    } // end while choosing words
 
 
     printer.Summary(
