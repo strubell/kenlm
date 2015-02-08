@@ -43,7 +43,7 @@ struct FullPrint : public BasicPrint {
 
 class heapCompare
 {
-  bool operator() (const double[]& lhs, const double[]&rhs) const
+  bool operator() (const double[] lhs, const double[]rhs) const
   {
     return (lhs[0]<rhs[0]);
   }
