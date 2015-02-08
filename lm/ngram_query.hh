@@ -81,12 +81,12 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
           state = out;
       }
 
-    }
+//    }
     // If people don't have a newline after their last query, this won't add a </s>.
     // Sue me.
     try {
       UTIL_THROW_IF('\n' != in.get(), util::Exception, "FilePiece is confused.");
-    } catch (const util::EndOfFileException &e) { break; }
+    } catch (const util::EndOfFileException &e) { break;}
     if (sentence_context) {
       ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
       total += ret.prob;
@@ -96,7 +96,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     printer.Line(oov, total);
     corpus_total += total;
     corpus_oov += oov;
-//  }
+  }
   printer.Summary(
       pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
       pow(10.0, -((corpus_total - corpus_total_oov_only) / static_cast<double>(corpus_tokens - corpus_oov))), // PPL excluding OOVs
