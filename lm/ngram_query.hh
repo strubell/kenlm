@@ -98,21 +98,23 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
           printer.Word(word, vocab, ret);
           ++corpus_tokens;
           state = out;
+
+          if (sentence_context) {
+            ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
+            total += ret.prob;
+            ++corpus_tokens;
+            printer.Word("</s>", model.GetVocabulary().EndSentence(), ret);
+          }
+
+          printer.Line(oov, total);
+          corpus_total += total;
+          corpus_oov += oov;
       }
 
 //    }
-    // If people don't have a newline after their last query, this won't add a </s>.
-    // Sue me.
 
-    if (sentence_context) {
-      ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
-      total += ret.prob;
-      ++corpus_tokens;
-      printer.Word("</s>", model.GetVocabulary().EndSentence(), ret);
-    }
-    printer.Line(oov, total);
-    corpus_total += total;
-    corpus_oov += oov;
+
+
 //  }
   printer.Summary(
       pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
