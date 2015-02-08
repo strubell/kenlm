@@ -41,11 +41,14 @@ struct FullPrint : public BasicPrint {
   }
 };
 
-class heapCompare
+struct ProbPair
 {
-  bool operator() (const double[] lhs, const double[]rhs) const
+  lm::WordIndex index;
+  double probability;
+  
+  bool operator<(const ProbPair& t)const
   {
-    return (lhs[0]<rhs[0]);
+    return probability < t.probability;
   }
 };
 
@@ -71,7 +74,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     } catch (const util::EndOfFileException &e) { break;}
   }
 
-        std::priority_queue<double[], std:vector<double[]>, heapCompare> probabilityHeap = new priority_queue();
+        std::priority_queue<ProbabilityPair> probabilityHeap;
         float total = 0.0;
         uint64_t oov = 0;
 
@@ -82,9 +85,9 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
           lm::WordIndex vocab = model.GetVocabulary().Index(word);
           ret = model.FullScore(state, vocab, out);
           // store word probabilities as we go
-          double wordScore[2];
-          wordScore[0] = ret.prob;
-          wordScore[1] = i;
+          ProbPair wordScore;
+          wordScore.probability = ret.prob;
+          wordScore.wordIndex = vocab;
           probabilityHeap.push_back(wordScore)
           if (vocab == model.GetVocabulary().NotFound()) {
             ++oov;
