@@ -121,9 +121,9 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         } // end for over vocab
 
         while (!probabilityHeap.empty()) {
-            ProbPair p = probabilityHeap.pop();
+            ProbPair p = probabilityHeap.top();
             std::cout << p.probability << std::endl;
-
+            probabilityHeap.pop();
         }
 //    } // end while choosing words
 
