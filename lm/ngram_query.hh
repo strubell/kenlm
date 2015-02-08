@@ -116,7 +116,6 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             total += ret.prob;
             printer.Word(word, wordIndex, ret);
             ++corpus_tokens;
-            state = out;
 
             if (sentence_context) {
                 ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
