@@ -126,9 +126,9 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             corpus_oov += oov;
         } // end for over vocab
 
-        double randPick = rand() * probSum;
+        double randPick = static_cast <double> (rand()) / (static_cast <double> (RAND_MAX/probSum));
         double curSum = 0.0;
-        std::cout <<randPick << std::endl;
+        std::cout << randPick << std::endl;
 
         while (!probabilityHeap.empty() && curSum < randPick) {
             ProbPair p = probabilityHeap.top();
