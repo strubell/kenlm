@@ -93,7 +93,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             ProbPair wordScore;
 
             lm::WordIndex wordIndex = model.GetVocabulary().Index(word);
-            ret = model.FullScore(state, vocab, out);
+            ret = model.FullScore(state, wordIndex, out);
             // store word probabilities as we go
             wordScore.probability = ret.prob;
             wordScore.wordIndex = wordIndex;
@@ -122,8 +122,8 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     } // end while choosing words
 
     while (!probabilityHeap.empty()) {
-        ProbPair p = probabilityHeap.front()
-        cout << p.probability << endl;
+        ProbPair p = probabilityHeap.front();
+        std::cout << p.probability << std::endl;
         probabilityHeap.pop();
     }
 
