@@ -11,7 +11,7 @@
 #include <ostream>
 #include <istream>
 #include <string>
-#include <priority_queue>
+#include <queue>
 
 #include <math.h>
 
