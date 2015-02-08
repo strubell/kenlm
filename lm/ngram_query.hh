@@ -54,17 +54,18 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
   uint64_t corpus_oov = 0;
   uint64_t corpus_tokens = 0;
 
-  std::vector<string> allTheWords;
-  allTheWords.push_back("anal");
-  allTheWords.push_back("sex");
-  allTheWords.push_back("good");
+  std::vector<StringPiece> allTheWords;
+  while (in.ReadWordSameLine(word)) {
+      allTheWords.push_back(word);
+  }
+
 
   while (true) {
     state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
     float total = 0.0;
     uint64_t oov = 0;
 
-    
+
 //    while (in.ReadWordSameLine(word)) {
       for(int i = 0; i < allTheWords.size(); i++){
           word = allTheWords[i];
