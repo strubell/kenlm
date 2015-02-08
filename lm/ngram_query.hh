@@ -57,6 +57,9 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
   std::vector<StringPiece> allTheWords;
   while (in.ReadWordSameLine(word)) {
       allTheWords.push_back(word);
+    try {
+      UTIL_THROW_IF('\n' != in.get(), util::Exception, "FilePiece is confused.");
+    } catch (const util::EndOfFileException &e) { break;}
   }
 
 
@@ -84,9 +87,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
 //    }
     // If people don't have a newline after their last query, this won't add a </s>.
     // Sue me.
-//    try {
-//      UTIL_THROW_IF('\n' != in.get(), util::Exception, "FilePiece is confused.");
-//    } catch (const util::EndOfFileException &e) { break;}
+
     if (sentence_context) {
       ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
       total += ret.prob;
