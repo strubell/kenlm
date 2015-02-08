@@ -89,7 +89,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
           ProbPair wordScore;
           wordScore.probability = ret.prob;
           wordScore.wordIndex = vocab;
-          probabilityHeap.push_back(wordScore)
+          probabilityHeap.push(wordScore);
           if (vocab == model.GetVocabulary().NotFound()) {
             ++oov;
             corpus_total_oov_only += ret.prob;
