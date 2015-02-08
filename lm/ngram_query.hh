@@ -44,92 +44,104 @@ struct FullPrint : public BasicPrint {
 
 struct ProbPair
 {
-  lm::WordIndex wordIndex;
-  double probability;
-  
-  bool operator<(const ProbPair& t)const
-  {
-    return probability < t.probability;
-  }
+    lm::WordIndex wordIndex;
+    double probability;
+
+    bool operator<(const ProbPair& t)const
+    {
+        return probability < t.probability;
+    }
 };
 
-template <class Model, class Printer> void Query(const Model &model, bool sentence_context) {
-  Printer printer;
-  typename Model::State state, out;
-  lm::FullScoreReturn ret;
-  StringPiece word;
+template <class Model, class Printer> void Query(const Model &model, bool sentence_context)
+{
+    Printer printer;
+    typename Model::State state, out;
+    lm::FullScoreReturn ret;
+    StringPiece word;
 
-  util::FilePiece in(0);
+    util::FilePiece in(0);
 
-  double corpus_total = 0.0;
-  double corpus_total_oov_only = 0.0;
-  uint64_t corpus_oov = 0;
-  uint64_t corpus_tokens = 0;
+    double corpus_total = 0.0;
+    double corpus_total_oov_only = 0.0;
+    uint64_t corpus_oov = 0;
+    uint64_t corpus_tokens = 0;
 
-// read in our vocab file because fuck figuring this out
-  std::vector<StringPiece> allTheWords;
-  while (in.ReadWordSameLine(word)) {
-      allTheWords.push_back(word);
-    try {
-      UTIL_THROW_IF('\n' != in.get(), util::Exception, "FilePiece is confused.");
-    } catch (const util::EndOfFileException &e) { break;}
-  }
+    // read in our vocab file because fuck figuring this out
+    std::vector<StringPiece> generationVocab;
+    while (in.ReadWordSameLine(word))
+    {
+        generationVocab.push_back(word);
+        try {
+            UTIL_THROW_IF('\n' != in.get(), util::Exception, "FilePiece is confused.");
+        } catch (const util::EndOfFileException &e) { break;}
+    }
 
+
+    // while we are still generating words for current sentence
+    // TODO stopping condition
+    while (true)
+    {
         std::priority_queue<ProbPair> probabilityHeap;
         float total = 0.0;
         uint64_t oov = 0;
+        // iterate over each word in our vocabulary and get the probability of choosing it
+        for(int i = 0; i < generationVocab.size(); i++)
+        {
+            state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
+            word = generationVocab[i];
+            ProbPair wordScore;
 
-//    while (in.ReadWordSameLine(word)) {
-      for(int i = 0; i < allTheWords.size(); i++){
-          state = sentence_context ? model.BeginSentenceState() : model.NullContextState();
-          word = allTheWords[i];
-          lm::WordIndex vocab = model.GetVocabulary().Index(word);
-          ret = model.FullScore(state, vocab, out);
-          // store word probabilities as we go
-          ProbPair wordScore;
-          wordScore.probability = ret.prob;
-          wordScore.wordIndex = vocab;
-          probabilityHeap.push(wordScore);
-          if (vocab == model.GetVocabulary().NotFound()) {
-            ++oov;
-            corpus_total_oov_only += ret.prob;
-          }
-          total += ret.prob;
-          printer.Word(word, vocab, ret);
-          ++corpus_tokens;
-          state = out;
+            lm::WordIndex wordIndex = model.GetVocabulary().Index(word);
+            ret = model.FullScore(state, vocab, out);
+            // store word probabilities as we go
+            wordScore.probability = ret.prob;
+            wordScore.wordIndex = wordIndex;
+            probabilityHeap.push(wordScore);
 
-          if (sentence_context) {
-            ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
+            if (wordIndex == model.GetVocabulary().NotFound()) {
+                ++oov;
+                corpus_total_oov_only += ret.prob;
+            }
             total += ret.prob;
+            printer.Word(word, wordIndex, ret);
             ++corpus_tokens;
-            printer.Word("</s>", model.GetVocabulary().EndSentence(), ret);
-          }
+            state = out;
 
-          printer.Line(oov, total);
-          corpus_total += total;
-          corpus_oov += oov;
-      }
+            if (sentence_context) {
+                ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
+                total += ret.prob;
+                ++corpus_tokens;
+                printer.Word("</s>", model.GetVocabulary().EndSentence(), ret);
+            }
 
-//    }
+            printer.Line(oov, total);
+            corpus_total += total;
+            corpus_oov += oov;
+        } // end for over vocab
+    } // end while choosing words
+
+    while (!probabilityHeap.empty()) {
+        ProbPair p = probabilityHeap.front()
+        cout << p.probability << endl;
+        probabilityHeap.pop();
+    }
 
 
+    printer.Summary(
+        pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
+        pow(10.0, -((corpus_total - corpus_total_oov_only) / static_cast<double>(corpus_tokens - corpus_oov))), // PPL excluding OOVs
+        corpus_oov,
+        corpus_tokens);
+    }
 
-//  }
-  printer.Summary(
-      pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
-      pow(10.0, -((corpus_total - corpus_total_oov_only) / static_cast<double>(corpus_tokens - corpus_oov))), // PPL excluding OOVs
-      corpus_oov,
-      corpus_tokens);
-}
-
-template <class Model> void Query(const char *file, const Config &config, bool sentence_context, bool show_words) {
-  Model model(file, config);
-  if (show_words) {
-    Query<Model, FullPrint>(model, sentence_context);
-  } else {
-    Query<Model, BasicPrint>(model, sentence_context);
-  }
+    template <class Model> void Query(const char *file, const Config &config, bool sentence_context, bool show_words) {
+    Model model(file, config);
+    if (show_words) {
+        Query<Model, FullPrint>(model, sentence_context);
+    } else {
+        Query<Model, BasicPrint>(model, sentence_context);
+    }
 }
 
 } // namespace ngram
