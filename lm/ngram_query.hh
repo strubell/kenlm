@@ -128,6 +128,8 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
 
         double randPick = rand() * probSum;
         double curSum = 0.0;
+        std::cout <<randPick << std::endl;
+
         while (!probabilityHeap.empty() && curSum < randPick) {
             ProbPair p = probabilityHeap.top();
             if (curSum + p.probability > randPick){
