@@ -11,6 +11,7 @@
 #include <ostream>
 #include <istream>
 #include <string>
+#include <priority_queue>
 
 #include <math.h>
 
@@ -43,7 +44,7 @@ struct FullPrint : public BasicPrint {
 
 struct ProbPair
 {
-  lm::WordIndex index;
+  lm::WordIndex wordIndex;
   double probability;
   
   bool operator<(const ProbPair& t)const
@@ -74,7 +75,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     } catch (const util::EndOfFileException &e) { break;}
   }
 
-        std::priority_queue<ProbabilityPair> probabilityHeap;
+        priority_queue<ProbabilityPair> probabilityHeap;
         float total = 0.0;
         uint64_t oov = 0;
 
