@@ -90,8 +90,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     {
     ++poop;
         std::priority_queue<ProbPair> probabilityHeap;
-        float total = 0.0;
-        uint64_t oov = 0;
+
         double probSum = 0.0;
         // iterate over each word in our vocabulary and get the probability of choosing it
         for(int i = 0; i < generationVocab.size(); i++)
@@ -109,24 +108,6 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             probabilityHeap.push(wordScore);
             probSum += wordScore.probability;
 
-            if (wordIndex == model.GetVocabulary().NotFound()) {
-                ++oov;
-                corpus_total_oov_only += ret.prob;
-            }
-            total += ret.prob;
-            printer.Word(word, wordIndex, ret);
-            ++corpus_tokens;
-
-            if (sentence_context) {
-                ret = model.FullScore(state, model.GetVocabulary().EndSentence(), out);
-                total += ret.prob;
-                ++corpus_tokens;
-                printer.Word("</s>", model.GetVocabulary().EndSentence(), ret);
-            }
-
-            printer.Line(oov, total);
-            corpus_total += total;
-            corpus_oov += oov;
         } // end for over vocab
 
         double randPick = static_cast <double> (rand()) / (static_cast <double> (RAND_MAX/probSum));
@@ -164,6 +145,8 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     } else {
         Query<Model, BasicPrint>(model, sentence_context);
     }
+
+    std::cout << outSent << std::endl;
 }
 
 } // namespace ngram
