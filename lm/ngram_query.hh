@@ -143,7 +143,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             probabilityHeap.pop();
         }
         // update state with chosen word
-        std::string chosenWord = generationVocab[p.vocabIndex];
+        std::string chosenWord = generationVocab[p.vocabIndex].as_string();
         lm::WordIndex wordIndex = model.GetVocabulary().Index(chosenWord);
         ret = model.FullScore(state, wordIndex, out);
         outSent += " " + chosenWord;
