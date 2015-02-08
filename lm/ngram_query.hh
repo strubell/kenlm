@@ -44,7 +44,8 @@ struct FullPrint : public BasicPrint {
 
 struct ProbPair
 {
-    lm::WordIndex wordIndex;
+//    lm::WordIndex wordIndex;
+    int vocabIndex;
     double probability;
 
     bool operator<(const ProbPair& t)const
@@ -85,6 +86,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         std::priority_queue<ProbPair> probabilityHeap;
         float total = 0.0;
         uint64_t oov = 0;
+        double probSum = 0.0;
         // iterate over each word in our vocabulary and get the probability of choosing it
         for(int i = 0; i < generationVocab.size(); i++)
         {
@@ -94,9 +96,11 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
 
             lm::WordIndex wordIndex = model.GetVocabulary().Index(word);
             ret = model.FullScore(state, wordIndex, out);
+            probSum += ret.prob;
             // store word probabilities as we go
             wordScore.probability = ret.prob;
-            wordScore.wordIndex = wordIndex;
+            wordScore.vocabIndex = i;
+//            wordScore.wordIndex = wordIndex;
             probabilityHeap.push(wordScore);
 
             if (wordIndex == model.GetVocabulary().NotFound()) {
@@ -120,9 +124,16 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             corpus_oov += oov;
         } // end for over vocab
 
+        double randPick = rand() * probSum;
+        double curSum = 0.0;
         while (!probabilityHeap.empty()) {
             ProbPair p = probabilityHeap.top();
-            std::cout << exp(p.probability) << std::endl;
+            if (curSum + p.probability > randPick){
+                std::cout << exp(p.probability) + " : " + generationVocab[p.vocabIndex] << std::endl;
+            }
+            else {
+                curSum += p.probability;
+            }
             probabilityHeap.pop();
         }
 //    } // end while choosing words
