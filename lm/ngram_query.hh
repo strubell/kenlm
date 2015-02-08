@@ -129,7 +129,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         while (!probabilityHeap.empty()) {
             ProbPair p = probabilityHeap.top();
             if (curSum + p.probability > randPick){
-                std::cout << exp(p.probability) + " : " + generationVocab[p.vocabIndex] << std::endl;
+                std::cout << exp(p.probability) << " : " << generationVocab[p.vocabIndex] << std::endl;
             }
             else {
                 curSum += p.probability;
