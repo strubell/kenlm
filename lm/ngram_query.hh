@@ -75,7 +75,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     } catch (const util::EndOfFileException &e) { break;}
   }
 
-        std::priority_queue<ProbabilityPair> probabilityHeap;
+        std::priority_queue<ProbPair> probabilityHeap;
         float total = 0.0;
         uint64_t oov = 0;
 
