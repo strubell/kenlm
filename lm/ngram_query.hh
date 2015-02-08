@@ -68,7 +68,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     uint64_t corpus_oov = 0;
     uint64_t corpus_tokens = 0;
 
-    string outSent = "";
+    std::string outSent = "";
 
     // read in our vocab file because fuck figuring this out
     std::vector<StringPiece> generationVocab;
@@ -143,7 +143,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             probabilityHeap.pop();
         }
         // update state with chosen word
-        string chosenWord = generationVocab[p.vocabIndex];
+        std::string chosenWord = generationVocab[p.vocabIndex];
         lm::WordIndex wordIndex = model.GetVocabulary().Index(chosenWord);
         ret = model.FullScore(state, wordIndex, out);
         outSent += " " + chosenWord;
