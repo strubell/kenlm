@@ -62,7 +62,7 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     StringPiece word;
 
     util::FilePiece in(0);
-  srand (time(NULL));
+    srand (time(NULL));
 
     double corpus_total = 0.0;
     double corpus_total_oov_only = 0.0;
@@ -86,9 +86,9 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
     int poop = 0;
     // while we are still generating words for current sentence
     // TODO stopping condition
-    while (poop < 3)
+    while (poop < 20)
     {
-    ++poop;
+        ++poop;
         std::priority_queue<ProbPair> probabilityHeap;
 
         double probSum = 0.0;
@@ -104,32 +104,49 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
             // store word probabilities as we go
             wordScore.probability = exp(ret.prob);
             wordScore.vocabIndex = i;
-//            wordScore.wordIndex = wordIndex;
             probabilityHeap.push(wordScore);
             probSum += wordScore.probability;
 
         } // end for over vocab
 
+        std::string chosenWord;
+        ProbPair p;
+        // limit to top k
+        probSum = 0;
+        int k = 0;
+        // how many top words to choose from
+        int K = 250;
+        std::vector<ProbPair> topK;
+        while (!probabilityHeap.empty() && k < K) {
+           p = probabilityHeap.top();
+           probSum += p.probability;
+           k++; 
+           probabilityHeap.pop();
+           topK.push_back(p);
+        }
         double randPick = static_cast <double> (rand()) / (static_cast <double> (RAND_MAX/probSum));
         double curSum = 0.0;
-        ProbPair p;
         // choose a word
-        while (!probabilityHeap.empty() && curSum < randPick) {
-            p = probabilityHeap.top();
+        k = 0;
+        while (k < topK.size() && curSum < randPick) {
+//            p = probabilityHeap.top();
+            p = topK[k];
             curSum += p.probability;
             if (curSum > randPick){
-                std::cout << p.probability << " : " << generationVocab[p.vocabIndex] << std::endl;
+                chosenWord = generationVocab[p.vocabIndex].as_string();
+                std::cout << p.probability << " : " << chosenWord << std::endl;
             }
-            probabilityHeap.pop();
+//            probabilityHeap.pop();
+            k++;
         }
         // update state with chosen word
-        std::string chosenWord = generationVocab[p.vocabIndex].as_string();
         lm::WordIndex wordIndex = model.GetVocabulary().Index(chosenWord);
         ret = model.FullScore(state, wordIndex, out);
         outSent += " " + chosenWord;
         state = out;
 
     } // end while choosing words
+    std::cout << outSent << std::endl;
 
     printer.Summary(
         pow(10.0, -(corpus_total / static_cast<double>(corpus_tokens))), // PPL including OOVs
@@ -146,7 +163,6 @@ template <class Model, class Printer> void Query(const Model &model, bool senten
         Query<Model, BasicPrint>(model, sentence_context);
     }
 
-//    std::cout << outSent << std::endl;
 }
 
 } // namespace ngram
